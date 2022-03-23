@@ -1,0 +1,228 @@
+openapi: 3.0.3
+info:
+  title: CSIQ Data API
+  description: The CSIQ Data API.
+  version: "1.0.0"
+
+tags:
+  - name: Resource
+    description: Browse resources exposed by the Data API.
+
+paths:
+  /api/base/SecurityRisk:
+    post:
+      tags:
+        - Resource
+      summary: Retrieves the instances of the SecurityRisk resource.
+      parameters:
+        - $ref: "#/components/parameters/TenancyParameters"
+        - $ref: "#/components/parameters/IdentityHeader"
+        - $ref: "#/components/parameters/ContextParameters"
+      requestBody:
+        $ref: "#/components/requestBodies/ResourcesQueryParameters"
+      responses:
+        200:
+          $ref: "#/components/responses/Rows"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/ServerError"
+  /api/base/SecurityIssue:
+    post:
+      tags:
+        - Resource
+      summary: Retrieves the instances of the SecurityIssue resource.
+      parameters:
+        - $ref: "#/components/parameters/TenancyParameters"
+        - $ref: "#/components/parameters/IdentityHeader"
+        - $ref: "#/components/parameters/ContextParameters"
+      requestBody:
+        $ref: "#/components/requestBodies/ResourcesQueryParameters"
+      responses:
+        200:
+          $ref: "#/components/responses/Rows"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/ServerError"
+  /api/base/EvaluationPlan:
+    post:
+      tags:
+        - Resource
+      summary: Retrieves the instances of the EvaluationPlan resource.
+      parameters:
+        - $ref: "#/components/parameters/TenancyParameters"
+        - $ref: "#/components/parameters/IdentityHeader"
+        - $ref: "#/components/parameters/ContextParameters"
+      requestBody:
+        $ref: "#/components/requestBodies/ResourcesQueryParameters"
+      responses:
+        200:
+          $ref: "#/components/responses/Rows"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/ServerError"
+
+components:
+  parameters:
+    TenancyParameters:
+      in: query
+      name: tenancy
+      description: The tenancy parameters for resource(s) API calls.
+      explode: true
+      schema:
+        $ref: "#/components/schemas/TenancyParameters"
+    IdentityHeader:
+      in: header
+      name: x-identity-token
+      description: The JWT Token as provided by the marketplace-api-gateway.
+      schema:
+        type: string
+    ContextParameters:
+      in: query
+      name: context
+      description: The context parameters for API calls.
+      explode: true
+      schema:
+        $ref: "#/components/schemas/ContextParameters"
+  requestBodies:
+    ResourcesQueryParameters:
+      description: The query parameters for resources API calls.
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/ResourcesQueryParameters"
+
+  responses:
+    Rows:
+      description: The resources.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Rows"
+    NotFound:
+      description: If the resource is not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ServerError"
+    ServerError:
+      description: If the execution failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ServerError"
+
+  schemas:
+    TenancyParameters:
+      type: object
+      description: The tenancy parameters for resource(s) API calls.
+      properties:
+        tid:
+          description: The identifier of the tenant.
+          type: string
+        uid:
+          description: The identifier of the user.
+          type: string
+    ContextParameters:
+      type: object
+      description: The context parameters for API calls.
+      required:
+        - x-sid
+      properties:
+        x-sid:
+          description: The source id.
+          type: string
+    ResourceQueryParameters:
+      type: object
+      description: The query parameters for resource API calls.
+      properties:
+        fields:
+          type: string
+          description: The comma separated list of the columns to return a value for.
+          default: id
+    ResourcesQueryParameters:
+      type: object
+      description: The query parameters for resources API calls.
+      allOf:
+        - $ref: "#/components/schemas/ResourceQueryParameters"
+        - type: object
+          properties:
+            page:
+              type: integer
+              description: The page number.
+              default: 1
+            perPage:
+              type: integer
+              description: The number of entries per page.
+              default: 100
+            sort:
+              type: string
+              description: The comma separated list of the columns to sort rows on.
+            filter:
+              type: string
+              description: A filter.
+            withCount:
+              description: When set to true (the default), return the entry count along with the entries.
+              type: boolean
+              default: true
+    Rows:
+      type: object
+      required:
+        - entries
+      properties:
+        entryCount:
+          type: integer
+          description: The number of entries.
+        entries:
+          type: array
+          description: The entries.
+          items:
+            $ref: "#/components/schemas/Row"
+    Row:
+      type: object
+      description: A data table row.
+      example:
+        id: system1:test100
+        system: system1
+        testId: test100
+        systemName: System 1
+        severity:
+          value: LOW
+          order: 1
+        issueTitle: localized issue title
+        createDate: 1648028389011
+    ServerError:
+      type: object
+      description: A server error.
+      required:
+        - error
+      properties:
+        error:
+          description: The error object.
+          type: object
+          required:
+            - id
+            - severity
+            - httpStatusCode
+            - message
+            - created
+          properties:
+            id:
+              description: The unique identifier for the error.
+              type: string
+            severity:
+              description: The severity of the error.
+              type: string
+            httpStatusCode:
+              description: The HTTP status code.
+              type: integer
+              format: int32
+            message:
+              description: The detailed error message.
+              type: string
+            created:
+              description: The date and time at which the error occurred, in milliseconds since Epoch.
+              type: integer
+              format: int64
